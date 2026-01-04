@@ -4,53 +4,305 @@
 <meta charset="UTF-8">
 <title>Tetris Tangram Solver</title>
 <style>
-    body { font-family: Arial; display: flex; gap: 20px; padding: 20px;}
-    #grid, .solutionGrid { border-collapse: collapse; }
+    body { 
+        font-family: Arial, sans-serif; 
+        display: flex; 
+        gap: 20px; 
+        padding: 20px;
+        max-width: 1400px;
+    }
+    
+    .controls {
+        min-width: 250px;
+    }
+    
+    .control-group {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .control-group h3 {
+        margin-top: 0;
+        color: #333;
+        font-size: 16px;
+    }
+    
+    .control-row {
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .control-row label {
+        flex: 1;
+    }
+    
+    .control-row input[type="number"] {
+        width: 60px;
+        padding: 4px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    button {
+        padding: 10px 16px;
+        margin: 5px 5px 5px 0;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .btn-primary {
+        background: #4CAF50;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #2196F3;
+        color: white;
+    }
+    
+    .btn-danger {
+        background: #f44336;
+        color: white;
+    }
+    
+    .btn-default {
+        background: #e0e0e0;
+        color: #333;
+    }
+    
+    #grid, .solutionGrid { 
+        border-collapse: collapse;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .solutionGrid {
+        overflow: visible;
+    }
+    
     #grid td, .solutionGrid td {
-        width: 25px; height: 25px;
+        width: 32px; 
+        height: 32px;
         border: 1px solid #ccc;
         text-align: center;
-        font-size: 14px;
+        font-size: 11px;
+        font-weight: bold;
+        transition: all 0.1s;
+    }
+    
+    #grid td {
+        cursor: pointer;
+    }
+    
+    #grid td:hover {
+        border-color: #666;
+    }
+    
+    .solutionGrid td {
+        font-size: 10px;
+        position: relative;
+    }
+    
+    .filled { 
+        background: #444; 
+    }
+
+    /* Solution colors - Base colors for piece types */
+    .piece { 
+        border: 2.5px solid rgba(0,0,0,0.4) !important;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .piece:hover {
+        z-index: 10;
+    }
+    
+    .piece.highlight {
+        border-color: #ff0 !important;
+        border-width: 3px !important;
+        box-shadow: 0 0 10px rgba(255, 255, 0, 0.8), inset 0 0 10px rgba(255, 255, 0, 0.3);
+        z-index: 10;
+    }
+
+    #results { 
+        white-space: pre; 
+        background: #f4f4f4; 
+        padding: 15px; 
+        margin-top: 10px; 
+        max-height: 400px; 
+        overflow: auto;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+    }
+    
+    #solutionVisual { 
+        margin-top: 20px;
+        overflow: visible;
+    }
+    
+    .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    
+    .status.working {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+    
+    .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .progress-info {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .main-content {
+        flex: 1;
+    }
+    
+    h2 {
+        color: #333;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 8px;
+    }
+    
+    .legend {
+        margin-top: 15px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    
+    .legend-item {
+        display: inline-block;
+        margin: 5px 10px 5px 0;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
         font-weight: bold;
     }
-    .filled { background: #444; }
-
-    /* Solution colors */
-    .c1 { background: #ffe066; }  /* single */
-    .cL { background: #f25f5c; }  /* L */
-    .cS { background: #70c1b3; }  /* S */
-    .cT { background: #247ba0; }  /* T */
-    .cI { background: #50514f; color:white;} /* I */
-
-    #results { white-space: pre; background:#f4f4f4; padding:10px; margin-top:10px; max-height:400px; overflow:auto;}
-    #solutionVisual { margin-top: 20px; }
+    
+    .legend-item.c1 { background: #ffe066; color: #333; }
+    .legend-item.cL { background: #f25f5c; color: white; }
+    .legend-item.cS { background: #70c1b3; color: white; }
+    .legend-item.cT { background: #247ba0; color: white; }
+    .legend-item.cI { background: #50514f; color: white; }
 </style>
 </head>
 <body>
 
-<div>
-    <h2>Grid Size</h2>
-    <label>Rows: <input id="rows" type="number" value="6" min="2"></label><br>
-    <label>Cols: <input id="cols" type="number" value="6" min="2"></label><br>
-    <button onclick="buildGrid()">Create Grid</button>
+<div class="controls">
+    <div class="control-group">
+        <h3>Grid Size</h3>
+        <div class="control-row">
+            <label>Rows:</label>
+            <input id="rows" type="number" value="5" min="2" max="15">
+        </div>
+        <div class="control-row">
+            <label>Cols:</label>
+            <input id="cols" type="number" value="8" min="2" max="15">
+        </div>
+        <button class="btn-default" onclick="buildGrid()">Create Grid</button>
+        <button class="btn-default" onclick="clearGrid()">Clear Grid</button>
+    </div>
 
-    <h3>Piece Counts</h3>
-    <div>1×1 cubes: <input id="p1" type="number" value="10"></div>
-    <div>L pieces: <input id="pL" type="number" value="10"></div>
-    <div>S pieces: <input id="pS" type="number" value="10"></div>
-    <div>T pieces: <input id="pT" type="number" value="10"></div>
-    <div>I pieces: <input id="pI" type="number" value="10"></div>
+    <div class="control-group">
+        <h3>Available Pieces</h3>
+        <div class="control-row">
+            <label>1×1 cubes:</label>
+            <input id="p1" type="number" value="5" min="0" max="50">
+        </div>
+        <div class="control-row">
+            <label>L pieces (3):</label>
+            <input id="pL" type="number" value="5" min="0" max="50">
+        </div>
+        <div class="control-row">
+            <label>S pieces (4):</label>
+            <input id="pS" type="number" value="5" min="0" max="50">
+        </div>
+        <div class="control-row">
+            <label>T pieces (4):</label>
+            <input id="pT" type="number" value="5" min="0" max="50">
+        </div>
+        <div class="control-row">
+            <label>I pieces (4):</label>
+            <input id="pI" type="number" value="5" min="0" max="50">
+        </div>
+    </div>
 
-    <button onclick="solve('least')">Solve (Least Blocks)</button>
-    <button onclick="solve('priority')">Solve (Use Most Abundant)</button>
+    <div class="control-group">
+        <h3>Solver Options</h3>
+        <div class="control-row">
+            <label>Timeout (sec):</label>
+            <input id="timeout" type="number" value="30" min="5" max="300">
+        </div>
+        <button class="btn-primary" onclick="solve('least')" id="solveLeast">
+            Solve (Least Blocks)
+        </button>
+        <button class="btn-secondary" onclick="solve('priority')" id="solvePriority">
+            Solve (Most Abundant)
+        </button>
+        <button class="btn-danger" onclick="stopSolve()" id="stopBtn" style="display:none;">
+            Stop
+        </button>
+    </div>
+
+    <div id="statusDiv"></div>
 </div>
 
-<div>
-    <h2>Grid</h2>
+<div class="main-content">
+    <h2>Grid (Click cells to mark as blocked)</h2>
     <table id="grid"></table>
+    
+    <div class="legend">
+        <strong>Piece Types:</strong>
+        <div class="legend-item c1">1 (1×1 cube)</div>
+        <div class="legend-item cL">L (3 cells)</div>
+        <div class="legend-item cS">S (4 cells)</div>
+        <div class="legend-item cT">T (4 cells)</div>
+        <div class="legend-item cI">I (4 cells)</div>
+        <div style="margin-top: 8px; font-size: 12px; color: #666;">
+            <em>Each piece instance is numbered (e.g., L-1, L-2) with distinct colors and borders</em>
+        </div>
+    </div>
 
     <h2>Results</h2>
-    <div id="results"></div>
+    <div id="results">Click "Solve" to find a solution...</div>
 
     <h2>Visual Solution</h2>
     <div id="solutionVisual"></div>
@@ -58,7 +310,7 @@
 
 <script>
 // ========================================================================================
-// Shape defs + rotations
+// Shape definitions + rotations
 // ========================================================================================
 
 const SHAPES_BASE = {
@@ -72,11 +324,13 @@ const SHAPES_BASE = {
 function rotate(shape) {
     return shape.map(([r,c]) => [c, -r]);
 }
+
 function normalize(shape) {
     const minR = Math.min(...shape.map(x=>x[0]));
     const minC = Math.min(...shape.map(x=>x[1]));
     return shape.map(([r,c]) => [r-minR, c-minC]);
 }
+
 function generateRotations(baseShapes) {
     let all = {};
     for (let k in baseShapes) {
@@ -93,26 +347,32 @@ function generateRotations(baseShapes) {
     }
     return all;
 }
+
 const SHAPES = generateRotations(SHAPES_BASE);
 
 // ========================================================================================
-// Build grid
+// Grid management
 // ========================================================================================
 
 let grid = [];
 let rows = 0, cols = 0;
 
 function buildGrid() {
-    rows = parseInt(rowsInput.value);
-    cols = parseInt(colsInput.value);
+    rows = parseInt(document.getElementById("rows").value);
+    cols = parseInt(document.getElementById("cols").value);
+
+    if (rows < 2 || rows > 15 || cols < 2 || cols > 15) {
+        updateStatus("Please use grid dimensions between 2 and 15", "error");
+        return;
+    }
 
     const table = document.getElementById("grid");
     table.innerHTML = "";
     grid = Array.from({length: rows}, () => Array(cols).fill(0));
 
-    for (let r=0;r<rows;r++) {
+    for (let r=0; r<rows; r++) {
         let tr = document.createElement("tr");
-        for (let c=0;c<cols;c++) {
+        for (let c=0; c<cols; c++) {
             let td = document.createElement("td");
             td.onclick = () => {
                 grid[r][c] = grid[r][c] ? 0 : 1;
@@ -122,119 +382,437 @@ function buildGrid() {
         }
         table.appendChild(tr);
     }
+    
+    document.getElementById("results").textContent = "Grid created. Click cells to mark as blocked, then click Solve.";
+    document.getElementById("solutionVisual").innerHTML = "";
 }
 
-const rowsInput = document.getElementById("rows");
-const colsInput = document.getElementById("cols");
+function clearGrid() {
+    for (let r=0; r<rows; r++) {
+        for (let c=0; c<cols; c++) {
+            grid[r][c] = 0;
+        }
+    }
+    buildGrid();
+}
 
 // ========================================================================================
-// Solver
+// Status updates
 // ========================================================================================
+
+function updateStatus(message, type = "working", progress = null) {
+    const statusDiv = document.getElementById("statusDiv");
+    if (!message) {
+        statusDiv.innerHTML = "";
+        return;
+    }
+    
+    let html = `<div class="status ${type}">${message}`;
+    if (progress) {
+        html += `<div class="progress-info">${progress}</div>`;
+    }
+    html += `</div>`;
+    statusDiv.innerHTML = html;
+}
+
+// ========================================================================================
+// Web Worker for solving
+// ========================================================================================
+
+let solverWorker = null;
+let solveStartTime = 0;
+let currentBestSolution = null;
+let currentBestCount = Infinity;
+
+function createWorker() {
+    const workerCode = `
+        const SHAPES_BASE = {
+            "1": [[[0,0]]],
+            "L": [[[0,0],[1,0],[1,1]]],
+            "S": [[[0,1],[0,2],[1,0],[1,1]]],
+            "T": [[[0,1],[1,0],[1,1],[1,2]]],
+            "I": [[[0,0],[0,1],[0,2],[0,3]]]
+        };
+
+        function rotate(shape) {
+            return shape.map(([r,c]) => [c, -r]);
+        }
+
+        function normalize(shape) {
+            const minR = Math.min(...shape.map(x=>x[0]));
+            const minC = Math.min(...shape.map(x=>x[1]));
+            return shape.map(([r,c]) => [r-minR, c-minC]);
+        }
+
+        function generateRotations(baseShapes) {
+            let all = {};
+            for (let k in baseShapes) {
+                let variations = new Set();
+                baseShapes[k].forEach(shape => {
+                    let current = shape;
+                    for (let i=0;i<4;i++) {
+                        current = normalize(current);
+                        variations.add(JSON.stringify(current));
+                        current = rotate(current);
+                    }
+                });
+                all[k] = [...variations].map(v=>JSON.parse(v));
+            }
+            return all;
+        }
+
+        const SHAPES = generateRotations(SHAPES_BASE);
+
+        let shouldStop = false;
+        let iterations = 0;
+
+        self.onmessage = function(e) {
+            const { grid, pieceCounts, order, rows, cols, timeout } = e.data;
+            shouldStop = false;
+            iterations = 0;
+            const startTime = Date.now();
+
+            let gridCopy = grid.map(row => row.slice());
+
+            function findEmpty() {
+                for (let r=0; r<rows; r++)
+                    for (let c=0; c<cols; c++)
+                        if (gridCopy[r][c] === 0) return [r,c];
+                return null;
+            }
+
+            function placeable(shape, r0, c0) {
+                for (let [dr,dc] of shape) {
+                    let r = r0+dr, c = c0+dc;
+                    if (r<0 || c<0 || r>=rows || c>=cols) return false;
+                    if (gridCopy[r][c] !== 0) return false;
+                }
+                return true;
+            }
+
+            function place(shape, r0, c0, val) {
+                for (let [dr,dc] of shape) {
+                    gridCopy[r0+dr][c0+dc] = val;
+                }
+            }
+
+            let best = null;
+            let bestCount = Infinity;
+            let pieceCounters = {"1": 0, "L": 0, "S": 0, "T": 0, "I": 0};
+
+            function backtrack(countUsed, depth) {
+                iterations++;
+                
+                // Progress updates every 10000 iterations
+                if (iterations % 10000 === 0) {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    self.postMessage({ 
+                        type: 'progress', 
+                        iterations, 
+                        elapsed,
+                        bestCount,
+                        best: best ? best.map(r => r.slice()) : null
+                    });
+                }
+
+                // Check timeout
+                if (Date.now() - startTime > timeout * 1000) {
+                    shouldStop = true;
+                    return;
+                }
+
+                // Check stop signal
+                if (shouldStop) return;
+
+                // Prune if already worse than best
+                if (countUsed >= bestCount) return;
+
+                let pos = findEmpty();
+                if (!pos) {
+                    best = gridCopy.map(r => r.slice());
+                    bestCount = countUsed;
+                    self.postMessage({ 
+                        type: 'progress', 
+                        iterations, 
+                        elapsed: ((Date.now() - startTime) / 1000).toFixed(1),
+                        bestCount,
+                        best: best.map(r => r.slice())
+                    });
+                    return;
+                }
+
+                let [r,c] = pos;
+
+                for (let key of order) {
+                    if (pieceCounts[key] <= 0) continue;
+                    
+                    for (let shape of SHAPES[key]) {
+                        if (shouldStop) return;
+
+                        if (placeable(shape, r, c)) {
+                            pieceCounters[key]++;
+                            const pieceId = key + "-" + pieceCounters[key];
+                            place(shape, r, c, pieceId);
+                            pieceCounts[key]--;
+                            backtrack(countUsed + 1, depth + 1);
+                            pieceCounts[key]++;
+                            place(shape, r, c, 0);
+                            pieceCounters[key]--;
+                        }
+                    }
+                }
+            }
+
+            backtrack(0, 0);
+
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            
+            if (shouldStop) {
+                self.postMessage({ 
+                    type: 'stopped', 
+                    best, 
+                    bestCount,
+                    iterations,
+                    elapsed
+                });
+            } else {
+                self.postMessage({ 
+                    type: 'complete', 
+                    best, 
+                    bestCount,
+                    iterations,
+                    elapsed
+                });
+            }
+        };
+    `;
+
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    return new Worker(URL.createObjectURL(blob));
+}
 
 function solve(mode) {
+    // Validate grid
+    if (rows === 0 || cols === 0) {
+        updateStatus("Please create a grid first", "error");
+        return;
+    }
+
     const pieceCounts = {
-        "1": parseInt(p1.value),
-        "L": parseInt(pL.value),
-        "S": parseInt(pS.value),
-        "T": parseInt(pT.value),
-        "I": parseInt(pI.value)
+        "1": parseInt(document.getElementById("p1").value),
+        "L": parseInt(document.getElementById("pL").value),
+        "S": parseInt(document.getElementById("pS").value),
+        "T": parseInt(document.getElementById("pT").value),
+        "I": parseInt(document.getElementById("pI").value)
     };
+
+    // Count empty cells
+    let emptyCells = 0;
+    for (let r=0; r<rows; r++) {
+        for (let c=0; c<cols; c++) {
+            if (grid[r][c] === 0) emptyCells++;
+        }
+    }
+
+    if (emptyCells === 0) {
+        updateStatus("Grid is already full!", "error");
+        return;
+    }
+
+    // Calculate total available space
+    const totalAvailable = 
+        pieceCounts["1"] * 1 +
+        pieceCounts["L"] * 3 +
+        pieceCounts["S"] * 4 +
+        pieceCounts["T"] * 4 +
+        pieceCounts["I"] * 4;
+
+    if (totalAvailable < emptyCells) {
+        updateStatus(`Not enough pieces! Need ${emptyCells} cells but only have ${totalAvailable}`, "error");
+        return;
+    }
 
     let order = Object.keys(pieceCounts);
 
     if (mode === "priority") {
-        order.sort((a,b)=>pieceCounts[b]-pieceCounts[a]);
+        order.sort((a,b) => pieceCounts[b] - pieceCounts[a]);
     } else {
-        const area = {"1":1,"L":3,"S":4,"T":4,"I":4};
-        order.sort((a,b)=>area[a]-area[b]);
+        const area = {"1":1, "L":3, "S":4, "T":4, "I":4};
+        order.sort((a,b) => area[a] - area[b]);
     }
 
-    let gridCopy = grid.map(row=>row.slice());
+    // Disable solve buttons, show stop button
+    document.getElementById("solveLeast").disabled = true;
+    document.getElementById("solvePriority").disabled = true;
+    document.getElementById("stopBtn").style.display = "inline-block";
 
-    function findEmpty() {
-        for (let r=0;r<rows;r++)
-            for (let c=0;c<cols;c++)
-                if (gridCopy[r][c] === 0) return [r,c];
-        return null;
+    const timeout = parseInt(document.getElementById("timeout").value);
+    updateStatus(`Solving... (timeout: ${timeout}s)`, "working", "Starting search...");
+
+    solveStartTime = Date.now();
+    currentBestSolution = null;
+    currentBestCount = Infinity;
+
+    // Create and start worker
+    if (solverWorker) {
+        solverWorker.terminate();
     }
 
-    function placeable(shape,r0,c0) {
-        for (let [dr,dc] of shape) {
-            let r=r0+dr, c=c0+dc;
-            if (r<0||c<0||r>=rows||c>=cols) return false;
-            if (gridCopy[r][c] !== 0) return false;
-        }
-        return true;
-    }
+    solverWorker = createWorker();
 
-    function place(shape,r0,c0,val) {
-        for (let [dr,dc] of shape) gridCopy[r0+dr][c0+dc] = val;
-    }
+    solverWorker.onmessage = function(e) {
+        const { type, best, bestCount, iterations, elapsed } = e.data;
 
-    let best=null;
-    let bestCount=Infinity;
-
-    function backtrack(countUsed) {
-        if (countUsed >= bestCount) return;
-
-        let pos = findEmpty();
-        if (!pos) {
-            best = gridCopy.map(r=>r.slice());
-            bestCount = countUsed;
-            return;
-        }
-
-        let [r,c] = pos;
-
-        for (let key of order) {
-            if (pieceCounts[key] <= 0) continue;
-            for (let shape of SHAPES[key]) {
-
-                if (placeable(shape,r,c)) {
-                    place(shape,r,c,key);
-                    pieceCounts[key]--;
-                    backtrack(countUsed+1);
-                    pieceCounts[key]++;
-                    place(shape,r,c,0);
-                }
+        if (type === 'progress') {
+            // Store the current best solution
+            if (best) {
+                currentBestSolution = best;
+                currentBestCount = bestCount;
             }
+            
+            const progress = bestCount < Infinity 
+                ? `Best: ${bestCount} pieces | Iterations: ${iterations.toLocaleString()} | Time: ${elapsed}s`
+                : `Searching... | Iterations: ${iterations.toLocaleString()} | Time: ${elapsed}s`;
+            updateStatus("Solving...", "working", progress);
+        } 
+        else if (type === 'complete' || type === 'stopped') {
+            // Re-enable buttons
+            document.getElementById("solveLeast").disabled = false;
+            document.getElementById("solvePriority").disabled = false;
+            document.getElementById("stopBtn").style.display = "none";
+
+            if (!best) {
+                const msg = type === 'stopped' 
+                    ? `Search stopped after ${elapsed}s. No solution found yet.`
+                    : `No solution found after ${elapsed}s.`;
+                updateStatus(msg, "error", `Explored ${iterations.toLocaleString()} possibilities`);
+                document.getElementById("results").textContent = "No solution found.";
+                document.getElementById("solutionVisual").innerHTML = "";
+            } else {
+                const msg = type === 'stopped'
+                    ? `Search stopped. Best solution uses ${bestCount} pieces.`
+                    : `Solution found using ${bestCount} pieces!`;
+                updateStatus(msg, "success", `Time: ${elapsed}s | Iterations: ${iterations.toLocaleString()}`);
+                displaySolution(best);
+            }
+
+            solverWorker.terminate();
+            solverWorker = null;
+            currentBestSolution = null;
+            currentBestCount = Infinity;
         }
+    };
+
+    solverWorker.postMessage({
+        grid: grid.map(row => row.slice()),
+        pieceCounts: {...pieceCounts},
+        order,
+        rows,
+        cols,
+        timeout
+    });
+}
+
+function stopSolve() {
+    if (solverWorker) {
+        const elapsed = ((Date.now() - solveStartTime) / 1000).toFixed(1);
+        
+        solverWorker.terminate();
+        solverWorker = null;
+        
+        // Re-enable buttons
+        document.getElementById("solveLeast").disabled = false;
+        document.getElementById("solvePriority").disabled = false;
+        document.getElementById("stopBtn").style.display = "none";
+        
+        // Display best solution found so far, if any
+        if (currentBestSolution && currentBestCount < Infinity) {
+            updateStatus(`Search stopped. Best solution uses ${currentBestCount} pieces.`, "success", `Time: ${elapsed}s`);
+            displaySolution(currentBestSolution);
+        } else {
+            updateStatus("Search stopped. No solution found yet.", "error", `Time: ${elapsed}s`);
+            document.getElementById("results").textContent = "No solution found before stopping.";
+            document.getElementById("solutionVisual").innerHTML = "";
+        }
+        
+        currentBestSolution = null;
+        currentBestCount = Infinity;
     }
+}
 
-    backtrack(0);
-
+function displaySolution(best) {
     const results = document.getElementById("results");
     const solutionVisual = document.getElementById("solutionVisual");
 
-    if (!best) {
-        results.textContent = "No solution found.";
-        solutionVisual.innerHTML = "";
-        return;
-    }
-
-    // ----- Text output -----
+    // Text output
     let txt = "Solution:\n";
-    best.forEach(row=>{
-        txt += row.map(x=>x===0?".":x).join(" ") + "\n";
+    best.forEach(row => {
+        txt += row.map(x => x===0 ? "." : (typeof x === 'string' ? x.split('-')[0] : x)).join(" ").padEnd(cols * 2) + "\n";
     });
     results.textContent = txt;
 
-    // ----- VISUAL GRID -----
+    // Generate color variations for each piece instance
+    const baseColors = {
+        "1": [255, 224, 102],   // yellow
+        "L": [242, 95, 92],     // red
+        "S": [112, 193, 179],   // teal
+        "T": [36, 123, 160],    // blue
+        "I": [80, 81, 79]       // dark gray
+    };
+
+    function getColorForPiece(pieceId) {
+        const [type, num] = pieceId.split('-');
+        const base = baseColors[type];
+        if (!base) return 'rgb(200,200,200)';
+        
+        // Generate variation based on piece number
+        const variation = (parseInt(num) - 1) * 30;
+        const r = Math.min(255, Math.max(0, base[0] + (variation % 2 === 0 ? variation : -variation)));
+        const g = Math.min(255, Math.max(0, base[1] + (variation % 3 === 0 ? variation : -variation)));
+        const b = Math.min(255, Math.max(0, base[2] + (variation % 5 === 0 ? variation : -variation)));
+        
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // Visual grid
     solutionVisual.innerHTML = "";
+    const container = document.createElement("div");
+    container.style.overflow = "visible";
     const table = document.createElement("table");
     table.className = "solutionGrid";
 
-    for (let r=0;r<rows;r++) {
+    for (let r=0; r<rows; r++) {
         let tr = document.createElement("tr");
-        for (let c=0;c<cols;c++) {
+        for (let c=0; c<cols; c++) {
             let td = document.createElement("td");
             let val = best[r][c];
 
             if (val === 1) {
                 td.classList.add("filled");
             } else if (val !== 0) {
-                td.classList.add("c"+val);
-                td.textContent = val;
+                td.classList.add("piece");
+                
+                // Set background color based on piece instance
+                if (typeof val === 'string') {
+                    td.style.backgroundColor = getColorForPiece(val);
+                    td.setAttribute('data-piece', val);
+                    td.textContent = val.split('-')[0];
+                    
+                    // Determine text color based on background brightness
+                    const rgb = getColorForPiece(val).match(/\d+/g).map(Number);
+                    const brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+                    td.style.color = brightness > 155 ? '#333' : 'white';
+                    
+                    // Add hover listeners
+                    td.addEventListener('mouseenter', function() {
+                        highlightPiece(val);
+                    });
+                    td.addEventListener('mouseleave', function() {
+                        clearHighlight();
+                    });
+                } else {
+                    td.textContent = val;
+                }
             }
 
             tr.appendChild(td);
@@ -242,9 +820,21 @@ function solve(mode) {
         table.appendChild(tr);
     }
 
-    solutionVisual.appendChild(table);
+    container.appendChild(table);
+    solutionVisual.appendChild(container);
 }
 
+function highlightPiece(pieceId) {
+    const cells = document.querySelectorAll(`[data-piece="${pieceId}"]`);
+    cells.forEach(cell => cell.classList.add('highlight'));
+}
+
+function clearHighlight() {
+    const cells = document.querySelectorAll('.highlight');
+    cells.forEach(cell => cell.classList.remove('highlight'));
+}
+
+// Initialize
 buildGrid();
 </script>
 
